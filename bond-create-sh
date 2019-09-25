@@ -1,0 +1,52 @@
+nmcli con del enp0s8
+
+Now we are going to configure bond for the below ports
+
+4: enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:a3:6c:cc brd ff:ff:ff:ff:ff:ff
+5: enp0s10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:1f:e0:06 brd ff:ff:ff:ff:ff:ff
+
+
+##Types of bonding
+Mode 0 (balance-rr) This mode transmits packets in a sequential order from the first available slave through the last. ...
+Mode 1 (active-backup) ...
+Mode 2 (balance-xor) ...
+Mode 3 (broadcast) ...
+Mode 4 (802.3ad) ...
+Mode 5 (balance-tlb) ...
+Mode 6 (balance-alb)cp.
+
+##Create a Bond file
+#nmcli con add type bond con-name bond0 ifname bond0 mode 5
+
+[root@kub-server ~]# nmcli con show
+NAME    UUID                                  TYPE      DEVICE
+bond0   f47123bd-2108-4b59-a957-b844ac255843  bond      bond0
+enp0s3  cdeed01f-580c-44b6-9649-c5c1b20e9658  ethernet  enp0s3
+enp0s8  00cb8299-feb9-55b6-a378-3fdc720e0bc6  ethernet  enp0s8
+
+##Adding Slave Devices
+nmcli con add type bond-slave con-name eth-slave1 ifname enp0s9 master bond0
+nmcli con add type bond-slave con-name eth-slave2 ifname enp0s10 master bond0
+
+[root@kub-server ~]# nmcli con show
+NAME        UUID                                  TYPE      DEVICE
+bond0       f47123bd-2108-4b59-a957-b844ac255843  bond      bond0
+enp0s3      cdeed01f-580c-44b6-9649-c5c1b20e9658  ethernet  enp0s3
+enp0s8      00cb8299-feb9-55b6-a378-3fdc720e0bc6  ethernet  enp0s8
+eth-slave1  9604e784-2e76-4158-8da8-15b51098d1fc  ethernet  enp0s9
+eth-slave2  1019651a-18d0-4593-b2bc-d873c1149080  ethernet  enp0s10
+
+Configure ip address to bond
+nmcli con mod bond0 ipv4.addresses 192.168.56.10/24 gw4 192.168.56.255
+nmcli con mod bond0 ipv4.method manual
+nmcli con up bond0
+
+nmcli con add type bond con-name bond0 ifname bond0:1 mode 5
+nmcli con mod bond0:1 ipv4.addresses 192.168.56.12/24 gw4 192.168.56.255
+nmcli con mod bond0:1 ipv4.method manual
+nmcli con up bond0:1
+
+cat /proc/net/bonding/bond0
+ 
